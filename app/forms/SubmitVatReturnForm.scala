@@ -85,11 +85,7 @@ object SubmitVatReturnForm {
       "box6" -> box6To9Validation,
       "box7" -> box6To9Validation,
       "box8" -> box6To9Validation,
-      "box9" -> box6To9Validation,
-      "flatRateScheme" -> boolean,
-      "start" -> localDate,
-      "end" -> localDate,
-      "due" -> localDate
+      "box9" -> box6To9Validation
     )(SubmitVatReturnModel.apply)(SubmitVatReturnModel.unapply)
   )
 

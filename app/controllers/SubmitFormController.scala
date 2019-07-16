@@ -35,7 +35,7 @@ import services.{DateService, VatObligationsService, VatSubscriptionService}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.controller.FrontendController
 import forms.SubmitVatReturnForm._
-import scala.concurrent.Future
+
 import java.net.URLDecoder
 
 @Singleton
@@ -49,40 +49,10 @@ class SubmitFormController @Inject()(val messagesApi: MessagesApi,
                                      val dateService: DateService) extends FrontendController with I18nSupport {
 
   def show(periodKey: String): Action[AnyContent] = (authPredicate andThen mandationStatusCheck).async { implicit user =>
-
-    user.session.get(SessionKeys.returnData) match {
-      case Some(model) => renderViewWithSessionData(periodKey, model)
-      case _ => renderViewWithoutSessionData(periodKey, SubmitVatReturnForm.submitVatReturnForm)
-    }
+    renderView(periodKey, SubmitVatReturnForm.submitVatReturnForm)
   }
 
-  private def renderViewWithSessionData(periodKey: String, model: String)(implicit request: Request[_], user: User[_], hc: HeaderCarrier) = {
-
-    val sessionData = Json.parse(model).as[SubmitVatReturnModel]
-
-    vatSubscriptionService.getCustomerDetails(user.vrn) map {
-      case Right(customerDetails) =>
-        Ok(views.html.submit_form(
-          periodKey,
-          customerDetails.clientName,
-          sessionData.flatRateScheme,
-          VatObligation(sessionData.start, sessionData.end, sessionData.due, periodKey),
-          SubmitVatReturnForm.submitVatReturnForm.fill(sessionData),
-          isAgent = user.isAgent)
-        )
-      case _ =>
-        Ok(views.html.submit_form(
-          periodKey,
-          None,
-          sessionData.flatRateScheme,
-          VatObligation(sessionData.start, sessionData.end, sessionData.due, periodKey),
-          SubmitVatReturnForm.submitVatReturnForm.fill(sessionData),
-          isAgent = user.isAgent)
-        )
-    }
-  }
-
-  private def renderViewWithoutSessionData(periodKey: String,
+  private def renderView(periodKey: String,
                                            form: Form[SubmitVatReturnModel])(implicit request: Request[_], user: User[_], hc: HeaderCarrier) = {
 
     for {
@@ -115,11 +85,11 @@ class SubmitFormController @Inject()(val messagesApi: MessagesApi,
                 )).addingToSession(SessionKeys.viewModel -> Json.toJson(viewModel).toString())
 
               } else {
-                Logger.debug(s"[SubmitFormController][renderViewWithoutSessionData] Obligation end date for period $periodKey has not yet passed.")
+                Logger.debug(s"[SubmitFormController][renderView] Obligation end date for period $periodKey has not yet passed.")
                 errorHandler.showBadRequestError
               }
             case _ =>
-              Logger.warn("[SubmitFormController][Show]: Length of matched obligations to period key is not equal to 1")
+              Logger.warn("[SubmitFormController][renderView]: Length of matched obligations to period key is not equal to 1")
               Redirect(appConfig.returnDeadlinesUrl)
           }
         }
@@ -160,19 +130,20 @@ class SubmitFormController @Inject()(val messagesApi: MessagesApi,
                 )
               }
             }
-          case _ => renderViewWithoutSessionData(periodKey, failure)
+          case _ => renderView(periodKey, failure)
         }
       },
       success => {
-        if(dateService.dateHasPassed(success.end)) {
-          Future.successful(
-            Redirect(controllers.routes.ConfirmSubmissionController.show(periodKey))
-              .addingToSession(SessionKeys.returnData -> Json.toJson(success).toString())
-              .removingFromSession(SessionKeys.viewModel)
-          )
-        } else {
-          Logger.debug(s"[SubmitFormController][submit] Obligation end date for period $periodKey has not yet passed.")
-          Future.successful(errorHandler.showBadRequestError)
+        vatObligationsService.getObligations(user.vrn) map {
+          case Right(obs) => if(dateService.dateHasPassed(obs.obligations.head.end)){
+              Redirect(controllers.routes.ConfirmSubmissionController.show(periodKey))
+                .addingToSession(SessionKeys.returnData -> Json.toJson(success).toString())
+                .removingFromSession(SessionKeys.viewModel)
+          } else {
+            Logger.debug(s"[SubmitFormController][submit] Obligation end date for period $periodKey has not yet passed.")
+            errorHandler.showBadRequestError
+          }
+          case _ => errorHandler.showInternalServerError
         }
       }
     )

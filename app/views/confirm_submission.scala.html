@@ -59,15 +59,15 @@
         appConfig.vatSummaryUrl -> messages("breadcrumbs.yourVatDetails"),
         appConfig.returnDeadlinesUrl -> messages("breadcrumbs.submitVatReturn")
       ),
-      messages("breadcrumbs.submitReturnForDate", displayDateRange(viewModel.returnDetail.start, viewModel.returnDetail.end))
+      messages("breadcrumbs.submitReturnForDate", displayDateRange(viewModel.obligation.start, viewModel.obligation.end))
     )
   }
 
   <section>
     <h1 class="heading-xlarge" data-metrics="submit-vat:view:nine-box-confirm;@user.isAgent">
       <span class="heading-secondary">@messages("confirm_submission.heading")</span>
-        @displayDateRange(viewModel.returnDetail.start, viewModel.returnDetail.end, useShortDayFormat = true)
-      <p class="form-hint heading-small">@messages("confirm_submission.returnDueDate", displayDate(viewModel.returnDetail.due))</p>
+        @displayDateRange(viewModel.obligation.start, viewModel.obligation.end, useShortDayFormat = true)
+      <p class="form-hint heading-small">@messages("confirm_submission.returnDueDate", displayDate(viewModel.obligation.due))</p>
     </h1>
 
     <h2 class="heading-large">@viewModel.userName</h2>
@@ -100,7 +100,7 @@
       <h3 class="bold-small form-group">@messages("confirm_submission.additionalInfo")</h3>
 
       <div class="form-group">
-      @if(viewModel.returnDetail.flatRateScheme){
+      @if(viewModel.flatRateScheme){
         @boxRow("box-six", "box6", "confirm_submission.boxSix", "confirm_submission.boxSixFlatRate", viewModel.returnDetail.box6)
       } else {
         @boxRow("box-six", "box6", "confirm_submission.boxSix", "confirm_submission.boxSixNoFlatRate", viewModel.returnDetail.box6)
@@ -115,7 +115,7 @@
     <section class="form-group divider--bottom">
       <div class="form-group">
         <h3 class="bold-large">@messages("confirm_submission.returnTotal")@displayMoney(viewModel.returnDetail.box5)</h3>
-        <p>@messages("confirm_submission.returnDueDate", displayDate(viewModel.returnDetail.due))</p>
+        <p>@messages("confirm_submission.returnDueDate", displayDate(viewModel.obligation.due))</p>
         <a
           onClick="sendGAEvent('submit-vat', 'change', 'nine-box-change' @user.isAgent)"
           href=@controllers.routes.SubmitFormController.show(viewModel.periodKey)>

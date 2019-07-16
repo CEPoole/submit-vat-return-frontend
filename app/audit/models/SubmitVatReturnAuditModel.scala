@@ -16,12 +16,15 @@
 
 package audit.models
 
-import models.SubmitVatReturnModel
+import models.{SubmitVatReturnModel, VatObligation}
 import models.auth.User
 import play.api.libs.json._
 import utils.JsonObjectSugar
 
-case class SubmitVatReturnAuditModel(user: User[_], submissionDetails: SubmitVatReturnModel, periodKey: String) extends ExtendedAuditModel {
+case class SubmitVatReturnAuditModel(user: User[_],
+                                      submissionDetails: SubmitVatReturnModel,
+                                      periodKey: String,
+                                      obligation: VatObligation) extends ExtendedAuditModel {
 
   override val transactionName: String = "submit-vat-return"
   override val auditType: String = "SubmitVATReturn"
@@ -36,9 +39,9 @@ object SubmitVatReturnAuditModel extends JsonObjectSugar {
       "isAgent" -> model.user.arn.isDefined,
       "agentReferenceNumber" -> model.user.arn,
       "vrn" -> model.user.vrn,
-      "periodDateFrom" -> model.submissionDetails.end,
-      "periodDateTo" -> model.submissionDetails.start,
-      "dueDate" -> model.submissionDetails.due,
+      "periodDateFrom" -> model.obligation.end,
+      "periodDateTo" -> model.obligation.start,
+      "dueDate" -> model.obligation.due,
       "periodKey" -> model.periodKey,
       "vatDueSales" -> model.submissionDetails.box1,
       "vatDueAcquisitions" -> model.submissionDetails.box2,

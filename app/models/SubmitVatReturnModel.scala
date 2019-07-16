@@ -28,11 +28,7 @@ case class SubmitVatReturnModel(box1: BigDecimal,
                                 box6: BigDecimal,
                                 box7: BigDecimal,
                                 box8: BigDecimal,
-                                box9: BigDecimal,
-                                flatRateScheme: Boolean,
-                                start: LocalDate,
-                                end: LocalDate,
-                                due: LocalDate)
+                                box9: BigDecimal)
 
 object SubmitVatReturnModel {
   implicit val format: OFormat[SubmitVatReturnModel] = Json.format[SubmitVatReturnModel]

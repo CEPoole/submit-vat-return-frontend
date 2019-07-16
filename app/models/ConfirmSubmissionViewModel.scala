@@ -18,4 +18,6 @@ package models
 
 case class ConfirmSubmissionViewModel(returnDetail: SubmitVatReturnModel,
                                       periodKey: String,
-                                      userName: Option[String])
+                                      userName: Option[String],
+                                      obligation: VatObligation,
+                                      flatRateScheme: Boolean)
